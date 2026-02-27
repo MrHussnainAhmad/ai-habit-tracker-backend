@@ -9,6 +9,9 @@ const {
 } = require('../services/email.service');
 
 const generateToken = (userId) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not set');
+  }
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
@@ -59,6 +62,7 @@ const signup = async (req, res) => {
       user: { id: user._id, email: user.email, name: user.name, coachPersona: user.coachPersona },
     });
   } catch (err) {
+    console.error('Signup error:', err.message);
     res.status(500).json({ error: 'Server error during signup' });
   }
 };
@@ -89,6 +93,7 @@ const login = async (req, res) => {
       user: { id: user._id, email: user.email, name: user.name, coachPersona: user.coachPersona },
     });
   } catch (err) {
+    console.error('Login error:', err.message);
     res.status(500).json({ error: 'Server error during login' });
   }
 };

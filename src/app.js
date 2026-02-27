@@ -6,11 +6,17 @@ const authRoutes = require('./routes/auth.routes');
 const habitRoutes = require('./routes/habit.routes');
 const aiRoutes = require('./routes/ai.routes');
 const userRoutes = require('./routes/user.routes');
+const connectDB = require('./config/db');
 
 const app = express();
 
 // Trust proxy for platforms like Vercel so rate-limit sees correct client IP
 app.set('trust proxy', 1);
+
+// Ensure DB connection in serverless environments
+connectDB().catch((err) => {
+  console.error('MongoDB connection failed:', err.message);
+});
 
 app.use(
   cors({
