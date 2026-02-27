@@ -117,7 +117,7 @@ const logHabit = async (req, res) => {
     const log = await HabitLog.findOneAndUpdate(
       { userId: req.userId, habitId, date: logDate },
       { status, note: note || '' },
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, new: true }
     );
 
     res.status(201).json({ message: 'Habit logged', log });
@@ -234,7 +234,7 @@ const useInsurance = async (req, res) => {
     const log = await HabitLog.findOneAndUpdate(
       { userId: req.userId, habitId: id, date: today },
       { status: 'done', note: 'Streak insurance' },
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, new: true }
     );
 
     habit.insuranceLastUsedAt = new Date();
@@ -363,7 +363,7 @@ const renewInsurance = async (req, res) => {
     const log = await HabitLog.findOneAndUpdate(
       { userId: req.userId, habitId: id, date: today },
       { status: 'done', note: 'Streak insurance (renewed)' },
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, new: true }
     );
 
     habit.insuranceLastUsedAt = new Date();
