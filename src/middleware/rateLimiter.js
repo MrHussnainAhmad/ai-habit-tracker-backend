@@ -7,9 +7,9 @@ const authLimiter = rateLimit({
 });
 
 const aiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20,
-  message: { error: 'AI suggestion limit reached. Try again later.' },
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 7,
+  message: { error: 'AI limit reached (7/day). Try again tomorrow.' },
 });
 
 const generalLimiter = rateLimit({

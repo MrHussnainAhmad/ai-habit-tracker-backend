@@ -6,17 +6,11 @@ const authRoutes = require('./routes/auth.routes');
 const habitRoutes = require('./routes/habit.routes');
 const aiRoutes = require('./routes/ai.routes');
 const userRoutes = require('./routes/user.routes');
-const connectDB = require('./config/db');
 
 const app = express();
 
 // Trust proxy for platforms like Vercel so rate-limit sees correct client IP
 app.set('trust proxy', 1);
-
-// Ensure DB connection in serverless environments
-connectDB().catch((err) => {
-  console.error('MongoDB connection failed:', err.message);
-});
 
 app.use(
   cors({
@@ -42,8 +36,12 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.message);
-  res.status(500).json({ error: 'Internal server error' });
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON body' });
+  }
+  console.error('Unhandled error:', err);
+  console.error('Unhandled error stack:', err.stack);
+  res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
 module.exports = app;

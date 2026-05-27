@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const isEmailConfigured = () => {
-  return (
+  return Boolean(
     process.env.SMTP_HOST &&
     process.env.SMTP_PORT &&
     process.env.SMTP_USER &&
@@ -44,8 +44,19 @@ const buildSignature = () => {
     '',
     'Best regards,',
     'Habit AI Team',
+    '',
+    'This Email "Workwithhussnainahmad@gmail.com" is under developer/owner\'s custody, any Question/Query feel free to mail.',
+    'This is not a Business Email, So Please Dont Spam it, Thanks For Understanding.',
   ].join('\n');
 };
+
+const buildHtmlSignature = () => `
+  <p>Best regards,<br/>Habit AI Team</p>
+  <p style="font-size:12px;color:#666;">
+    This Email "Workwithhussnainahmad@gmail.com" is under developer/owner's custody, any Question/Query feel free to mail.<br/>
+    This is not a Business Email, So Please Dont Spam it, Thanks For Understanding.
+  </p>
+`;
 
 const sendWelcomeEmail = async (email, name) => {
   const safeName = name || 'there';
@@ -75,7 +86,7 @@ const sendWelcomeEmail = async (email, name) => {
       <li>Open AI Coach for daily suggestions.</li>
     </ol>
     <p>If you did not create this account, please reply to this email.</p>
-    <p>Best regards,<br/>Habit AI Team</p>
+    ${buildHtmlSignature()}
   `;
   return sendEmail({ to: email, subject, text, html });
 };
@@ -96,7 +107,7 @@ const sendPasswordResetEmail = async (email, code) => {
     <p><strong>Your verification code is: ${code}</strong></p>
     <p>This code expires in 15 minutes.</p>
     <p>If you did not request a password reset, you can safely ignore this email.</p>
-    <p>Best regards,<br/>Habit AI Team</p>
+    ${buildHtmlSignature()}
   `;
   return sendEmail({ to: email, subject, text, html });
 };
@@ -112,7 +123,39 @@ const sendPasswordResetConfirmationEmail = async (email) => {
   const html = `
     <p>This is a confirmation that your Habit AI password was changed successfully.</p>
     <p>If you did not perform this change, please reset your password immediately and secure your account.</p>
-    <p>Best regards,<br/>Habit AI Team</p>
+    ${buildHtmlSignature()}
+  `;
+  return sendEmail({ to: email, subject, text, html });
+};
+
+const sendPasswordChangedEmail = async (email) => {
+  const subject = 'Your Habit AI password was updated';
+  const text = [
+    'This is a confirmation that your Habit AI password was updated from your profile settings.',
+    '',
+    'If you did not perform this action, please reset your password immediately and secure your account.',
+    buildSignature(),
+  ].join('\n');
+  const html = `
+    <p>This is a confirmation that your Habit AI password was updated from your profile settings.</p>
+    <p>If you did not perform this action, please reset your password immediately and secure your account.</p>
+    ${buildHtmlSignature()}
+  `;
+  return sendEmail({ to: email, subject, text, html });
+};
+
+const sendAccountDeletedEmail = async (email) => {
+  const subject = 'Your Habit AI account was deleted';
+  const text = [
+    'This is a confirmation that your Habit AI account and related data were deleted.',
+    '',
+    'If you did not request this action, please contact support immediately.',
+    buildSignature(),
+  ].join('\n');
+  const html = `
+    <p>This is a confirmation that your Habit AI account and related data were deleted.</p>
+    <p>If you did not request this action, please contact support immediately.</p>
+    ${buildHtmlSignature()}
   `;
   return sendEmail({ to: email, subject, text, html });
 };
@@ -122,5 +165,7 @@ module.exports = {
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendPasswordResetConfirmationEmail,
+  sendPasswordChangedEmail,
+  sendAccountDeletedEmail,
   isEmailConfigured,
 };

@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Habit = require('../models/Habit');
 const HabitLog = require('../models/HabitLog');
+const { sendAccountDeletedEmail } = require('../services/email.service');
 
 const getProfile = async (req, res) => {
   try {
@@ -92,10 +93,20 @@ const deleteAccount = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const userEmail = user.email;
 
     await HabitLog.deleteMany({ userId: req.userId });
     await Habit.deleteMany({ userId: req.userId });
     await User.deleteOne({ _id: req.userId });
+
+    const stillExists = await User.exists({ _id: req.userId });
+    if (stillExists) {
+      return res.status(500).json({ error: 'Failed to delete account completely' });
+    }
+
+    sendAccountDeletedEmail(userEmail).catch((err) => {
+      console.warn('Account deleted email failed:', err.message);
+    });
 
     res.json({ message: 'Account deleted' });
   } catch (err) {

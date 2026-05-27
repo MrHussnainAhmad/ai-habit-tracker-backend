@@ -3,6 +3,8 @@ const HabitLog = require('../models/HabitLog');
 const User = require('../models/User');
 const { getAISuggestion } = require('../services/ai.service');
 
+const AI_DOWN_MESSAGE = 'Looks Like AI is not Responding';
+
 const getPersonaSystem = (persona) => {
   switch (persona) {
     case 'direct':
@@ -166,10 +168,10 @@ const getSuggestion = async (req, res) => {
       return res.json({ suggestion: aiResponse, source: 'ai' });
     }
 
-    return res.json({ suggestion: getFallback(focus), source: 'fallback' });
+    return res.json({ suggestion: AI_DOWN_MESSAGE, source: 'fallback' });
   } catch (err) {
     console.error('Suggestion error:', err.message);
-    res.json({ suggestion: getFallback(focus), source: 'fallback' });
+    res.json({ suggestion: AI_DOWN_MESSAGE, source: 'fallback' });
   }
 };
 
@@ -206,10 +208,10 @@ const getHabitSuggestion = async (req, res) => {
       return res.json({ suggestion: aiResponse, source: 'ai' });
     }
 
-    return res.json({ suggestion: getHabitFallbackPlan(habit), source: 'fallback' });
+    return res.json({ suggestion: AI_DOWN_MESSAGE, source: 'fallback' });
   } catch (err) {
     console.error('Habit suggestion error:', err.message);
-    res.json({ suggestion: getHabitFallbackPlan(), source: 'fallback' });
+    res.json({ suggestion: AI_DOWN_MESSAGE, source: 'fallback' });
   }
 };
 
@@ -269,13 +271,13 @@ const getHabitQuestion = async (req, res) => {
     }
 
     return res.json({
-      answer: 'I could not generate an answer right now. Please try again.',
+      answer: AI_DOWN_MESSAGE,
       source: 'fallback',
     });
   } catch (err) {
     console.error('Habit question error:', err.message);
     res.json({
-      answer: 'I could not generate an answer right now. Please try again.',
+      answer: AI_DOWN_MESSAGE,
       source: 'fallback',
     });
   }

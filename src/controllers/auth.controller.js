@@ -6,6 +6,7 @@ const {
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendPasswordResetConfirmationEmail,
+  sendPasswordChangedEmail,
 } = require('../services/email.service');
 
 const generateToken = (userId) => {
@@ -62,8 +63,15 @@ const signup = async (req, res) => {
       user: { id: user._id, email: user.email, name: user.name, coachPersona: user.coachPersona },
     });
   } catch (err) {
-    console.error('Signup error:', err.message);
-    res.status(500).json({ error: 'Server error during signup' });
+    console.error('Signup error:', err);
+    console.error('Signup error stack:', err.stack);
+    if (err.code === 11000) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Invalid signup data' });
+    }
+    res.status(500).json({ error: 'Server error during signup', details: err.message });
   }
 };
 
@@ -93,8 +101,9 @@ const login = async (req, res) => {
       user: { id: user._id, email: user.email, name: user.name, coachPersona: user.coachPersona },
     });
   } catch (err) {
-    console.error('Login error:', err.message);
-    res.status(500).json({ error: 'Server error during login' });
+    console.error('Login error:', err);
+    console.error('Login error stack:', err.stack);
+    res.status(500).json({ error: 'Server error during login', details: err.message });
   }
 };
 
@@ -198,6 +207,10 @@ const changePassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
     await user.save();
+
+    sendPasswordChangedEmail(user.email).catch((err) => {
+      console.warn('Password changed email failed:', err.message);
+    });
 
     res.json({ message: 'Password updated successfully' });
   } catch (err) {
