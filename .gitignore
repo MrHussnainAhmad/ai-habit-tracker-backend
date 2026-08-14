@@ -22,3 +22,13 @@ build/
 .cache/
 .parcel-cache/
 .eslintcache
+
+# local key validation/testing scripts
+test-ai-keys.js
+test-new-keys.js
+validate-keys.js
+
+.env
+envv
+.env.local
+.env.*
