@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const { generalLimiter } = require('./middleware/rateLimiter');
+const connectDB = require('./config/db');
 
 const authRoutes = require('./routes/auth.routes');
 const habitRoutes = require('./routes/habit.routes');
@@ -26,10 +28,38 @@ app.get('/', (req, res) => {
   res.json({ message: 'Habit AI API is running' });
 });
 
-app.use('/auth', authRoutes);
-app.use('/habits', habitRoutes);
-app.use('/ai', aiRoutes);
-app.use('/users', userRoutes);
+const requireDatabase = async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Database unavailable:', err.message);
+    res.status(503).json({ error: 'Database temporarily unavailable' });
+  }
+};
+
+app.get('/cron/db-ping', async (req, res) => {
+  if (
+    !process.env.CRON_SECRET ||
+    req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    await connectDB();
+    await mongoose.connection.db.admin().ping();
+    return res.json({ ok: true, database: 'connected', checkedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Database keep-alive failed:', err.message);
+    return res.status(503).json({ ok: false, error: 'Database temporarily unavailable' });
+  }
+});
+
+app.use('/auth', requireDatabase, authRoutes);
+app.use('/habits', requireDatabase, habitRoutes);
+app.use('/ai', requireDatabase, aiRoutes);
+app.use('/users', requireDatabase, userRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
