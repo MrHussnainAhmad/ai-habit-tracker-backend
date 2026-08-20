@@ -3,6 +3,11 @@ const dns = require('dns');
 
 let connectionPromise = null;
 
+const configuredMaxPoolSize = Number.parseInt(process.env.MONGODB_MAX_POOL_SIZE || '5', 10);
+const maxPoolSize = Number.isInteger(configuredMaxPoolSize)
+  ? Math.min(Math.max(configuredMaxPoolSize, 1), 20)
+  : 5;
+
 const applyDnsFallback = () => {
   // Use public resolvers for SRV lookups when local resolver blocks/refuses them.
   const fallback = (process.env.MONGODB_DNS_SERVERS || '1.1.1.1,8.8.8.8')
@@ -17,6 +22,12 @@ const applyDnsFallback = () => {
 
 const openConnection = () =>
   mongoose.connect(process.env.MONGODB_URI, {
+    // Serverless instances reuse a small pool instead of opening a connection per request.
+    maxPoolSize,
+    minPoolSize: 0,
+    maxConnecting: 2,
+    maxIdleTimeMS: 60000,
+    waitQueueTimeoutMS: 5000,
     serverSelectionTimeoutMS: 10000,
   });
 
